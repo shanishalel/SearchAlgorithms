@@ -133,13 +133,13 @@ public class puzzle {
 	public String DFID()  {
 		numvertex=1;
 		String result="";
+
 		for(int depth=0;depth<Integer.MAX_VALUE;depth++) {
 			HashMap<String,Node> stateSets = new HashMap<>();
 			result=limited_dfs(root,goalState, depth,stateSets);
 			if(this.WithOpen==true) {
 				PrintOpen(stateSets);
 			}
-
 
 			if(!result.equals("cutoff")) {
 				return result;
@@ -156,10 +156,7 @@ public class puzzle {
 
 	public String limited_dfs(Node n , Integer [][] goalState, int limit, HashMap <String,Node> H) {
 		String result="";
-		boolean isCutoff=true;  
-		List<Node> nodeSuccessors = null;
-
-
+		 
 		if(check_equal(goalState, n.getState())) {
 			result=Node_Operator.getPath(n,root);
 			result+="\nNum:"+numvertex;
@@ -171,18 +168,17 @@ public class puzzle {
 			return "cutoff";
 		}
 		else {
+			List<Node> nodeSuccessors = null;
 			H.put(n.toString(),n);
-			isCutoff=false;
+			boolean isCutoff=false; 
 			nodeSuccessors = Node_Operator.getOperators(n,goalState,H);
 			for (Node g : nodeSuccessors) {
+				
+				
 				numvertex++;
-				//				n.addChild(g);
 				g.setParent(n);                   
-				g.setVisited(true);
 
 				result=limited_dfs(g,goalState,limit-1,H);
-
-
 
 				if(result.equals("cutoff")) {
 					isCutoff=true;
@@ -227,6 +223,7 @@ public class puzzle {
 			if(this.WithOpen==true) {
 				PrintOpen(open);
 			}
+			
 
 			Node n=nodePriorityQueue.poll();
 
@@ -246,6 +243,7 @@ public class puzzle {
 
 			for (Node x : nodeSuccessors) {
 				NumVertex++;
+
 				x.setParent(n);
 				x.setVisited(true);
 				if(!close.containsKey(x.toString()) && !nodePriorityQueue.contains(x) ) {
@@ -269,7 +267,7 @@ public class puzzle {
 		}
 
 		String res="no path";
-		res+="\nNum:"+numvertex;
+		res+="\nNum:"+NumVertex;
 		return res;
 
 
@@ -298,7 +296,9 @@ public class puzzle {
 				}
 			}
 		}
-		return manhattanDistance;  
+		return 3*manhattanDistance;
+		
+				
 
 	} 
 
@@ -322,7 +322,6 @@ public class puzzle {
 			open.put(root.toString(),root);
 
 			while(!L.isEmpty()) {
-				NumVertex++;
 
 				if(this.WithOpen==true) {
 					PrintOpen(open);
@@ -337,7 +336,8 @@ public class puzzle {
 					L.push(n);
 					List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState);
 					for (Node g : nodeSuccessors) {
-						//						n.addChild(g);
+						NumVertex++;
+
 						g.setParent(n);                   
 						int f_g=g.getTotalCost()+heuristicFunction(g.getState(),goalState);
 
@@ -376,7 +376,7 @@ public class puzzle {
 
 			}
 			t=minF;
-
+			root.setVisited(false);//initialize the root
 
 
 
@@ -384,7 +384,7 @@ public class puzzle {
 		}
 
 		String res="no path";
-		res+="\nNum:"+numvertex;
+		res+="\nNum:"+NumVertex;
 		return res;
 
 
@@ -429,7 +429,7 @@ public class puzzle {
 				for (Node g : nodeSuccessors) {
 					NumVertex++;
 					g.setParent(n);
-					g.setTotalCost(g.getTotalCost()+g.getCost(), heuristicFunction(g.getState(), goalState));
+					g.setTotalCost(g.getTotalCost(), heuristicFunction(g.getState(), goalState));
 					N[i]=g;
 					i++;
 
@@ -438,51 +438,30 @@ public class puzzle {
 				Arrays.asList(N);
 				NodePriorityComparator nodePriorityComparator = new NodePriorityComparator();
 				Arrays.sort(N,nodePriorityComparator);
+				
 
-				for (Node g : nodeSuccessors) {
-					if(g.getCost()>=t) {
+				for (i=0;i<N.length;i++) {
+					if(N[i].getTotalCost()>=t) {
 						//remove g and all the nodes after it 
-						int location=0;
-						for(int j=0;j<N.length;j++) {
-							if(check_equal(N[j].getState(),g.getState())) {
-								location=j;
-							}
-
+						
+						N[i]=null;
+						while(i<N.length) {
+							N[i]=null;
+							i++;
 						}
-						Node [] T=new Node[location];
-						for(int j=0;j<T.length;j++) {
-							T[j]=N[j];
-						}
-						N=T;
-
+						
+						
+						
 					}
-					else if(H.containsKey(g.toString()) && g.isVisited()) {
+					else if(H.containsKey(N[i].toString()) && N[i].isVisited()) {
 						//remove g from N
-						Node [] T=new Node[N.length-1];
-						int r=0;
-						for(int j=0;j<N.length;j++) {
-							if(!check_equal(N[j].getState(),g.getState())) {
-								T[r]=N[j];
-								r++;
-							}
-
-						}
-						N=T;
+						N[i]=null;
 					}
-					else if(H.containsKey(g.toString()) && !g.isVisited()) {
-						Node g_tag=H.get(g.toString());
-						if(g_tag.getTotalCost()<=g.getTotalCost()) {
+					else if(H.containsKey(N[i].toString()) && !N[i].isVisited()) {
+						Node g_tag=H.get(N[i].toString());
+						if(g_tag.getTotalCost()<=N[i].getTotalCost()) {
 							//remove g from N
-							Node [] T=new Node[N.length-1];
-							int r=0;
-							for(int j=0;j<N.length;j++) {
-								if(!check_equal(N[j].getState(),g.getState())) {
-									T[r]=N[j];
-									r++;
-								}
-
-							}
-							N=T;
+							N[i]=null;
 
 						}
 						else {
@@ -490,12 +469,12 @@ public class puzzle {
 							H.remove(g_tag.toString());
 						}
 					}
-					else if(check_equal(g.getState(), goalState) ) {
+					else if(N[i]!=null && check_equal(N[i].getState(), goalState) ) {
 
-						t=g.getTotalCost()+g.getCost()+ heuristicFunction(g.getState(), goalState);
-						result=Node_Operator.getPath(g,root);
+						t=N[i].getTotalCost()+ heuristicFunction(N[i].getState(), goalState);
+						result=Node_Operator.getPath(N[i],root);
 						result+="\nNum:"+NumVertex;
-						int Cost=Node_Operator.getCost(g, root);
+						int Cost=Node_Operator.getCost(N[i], root);
 						result+="\nCost: "+Cost;
 
 						if(Cost<t) {
@@ -504,25 +483,20 @@ public class puzzle {
 
 
 						//remove g and all the nodes after it 
-						int location=0;
-						for(int j=0;j<N.length;j++) {
-							if(check_equal(N[j].getState(),g.getState())) {
-								location=j;
-							}
-
+						N[i]=null;
+						while(i<N.length) {
+							N[i]=null;
+							i++;
 						}
-						Node [] T=new Node[location];
-						for(int j=0;j<T.length;j++) {
-							T[j]=N[j];
-						}
-						N=T;
 					}
 				}
 
 				//insert N into L and H
 				for(int j=N.length-1;j>=0;j--) {
-					L.push(N[j]);
-					H.put(N[j].toString(),N[j]);
+					if(N[j]!=null) {
+						L.push(N[j]);
+						H.put(N[j].toString(),N[j]);
+					}					
 
 
 				}

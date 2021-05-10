@@ -2,7 +2,6 @@
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Stack;
 
@@ -352,6 +351,7 @@ public class Node_Operator {
 
 		return successors;
 	}
+	
 	/*gets the total cost */
 	public static int getCost(Node goal, Node root) {
 		int totalCost=0;
@@ -607,7 +607,6 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="D";
 								t.setMovement(move);
-
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
 

@@ -22,7 +22,7 @@ public class Ex1 {
 
 		try {
 
-			File myObj = new File("input3.txt");
+			File myObj = new File("input2.txt");
 			Scanner myReader = new Scanner(myObj);
 
 			//while (myReader.hasNextLine()) {
@@ -209,7 +209,7 @@ public class Ex1 {
 	}
 		//write ans to output.txt
 		//just for now 
-		System.out.println(ans);
+//		System.out.println(ans);
 		try {
 			FileWriter myWriter = new FileWriter("output.txt");
 			myWriter.write(ans);
