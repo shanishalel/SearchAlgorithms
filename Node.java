@@ -18,12 +18,20 @@ public class Node {
     private int cost;
     private int estimatedCostToGoal;
     private int totalCost;
+    private int F;
     private int depth;
     
     static int id_number;
     public int id;
 
 
+    public void setF(int g) {
+    	this.F=g;
+    }
+    
+    public int getF() {
+    	return this.F;
+    }
     
     public void setColumn(int column ) {
     	this.column=column ;
@@ -151,6 +159,8 @@ public class Node {
     	}
     	return ans;
     }
+    
+ 
     
     
    

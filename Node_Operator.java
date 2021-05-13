@@ -164,6 +164,7 @@ public class Node_Operator {
 
 								Node t=new Node(curr_state);
 								t.setCost(6);
+								t.setDepth(curr.getDepth()+1);
 								//add movement 
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i+1][j].toString();
 								move+="L";
@@ -195,6 +196,7 @@ public class Node_Operator {
 								//add movement 
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i][j+1].toString();
 								move+="U";
+								t.setDepth(curr.getDepth()+1);
 								t.setMovement(move);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
 
@@ -221,6 +223,7 @@ public class Node_Operator {
 								//add movement 
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i+1][j].toString();
 								move+="R";
+								t.setDepth(curr.getDepth()+1);
 								t.setMovement(move);
 
 								t.setCost(6);
@@ -249,6 +252,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i][j+1].toString();
 								move+="D";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(7);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -273,6 +277,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="L";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -296,7 +301,8 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="U";
 								t.setMovement(move);
-								
+								t.setDepth(curr.getDepth()+1);
+
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
 								successors.add(t);
@@ -317,6 +323,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="R";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -337,6 +344,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="D";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -428,6 +436,8 @@ public class Node_Operator {
 
 								Node t=new Node(curr_state);
 								t.setCost(6);
+								t.setDepth(curr.getDepth()+1);
+
 								//add movement 
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i+1][j].toString();
 								move+="L";
@@ -457,6 +467,8 @@ public class Node_Operator {
 
 								Node t=new Node(curr_state);
 								t.setCost(7);
+								t.setDepth(curr.getDepth()+1);
+
 								//add movement 
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i][j+1].toString();
 								move+="U";
@@ -488,6 +500,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i+1][j].toString();
 								move+="R";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(6);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -515,6 +528,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() + "&"+ t.getState()[i][j+1].toString();
 								move+="D";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(7);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -539,6 +553,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="L";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -562,6 +577,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="U";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(5);
 								successors.add(t);
@@ -585,6 +601,7 @@ public class Node_Operator {
 								String move = t.getState()[i][j].toString() ;
 								move+="R";
 								t.setMovement(move);
+								t.setDepth(curr.getDepth()+1);
 
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
@@ -609,6 +626,7 @@ public class Node_Operator {
 								t.setMovement(move);
 								t.setCost(5);
 								t.setTotalCost(curr.getTotalCost()+t.getCost());
+								t.setDepth(curr.getDepth()+1);
 
 								successors.add(t);
 							}

@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -78,15 +80,15 @@ public class puzzle {
 			close.put(n.toString(),root);
 			open.remove(n.toString());
 
-			List<Node> nodeSuccessors = Node_Operator.getOperators(n,goalState);
+			List<Node> nodeSuccessors = Node_Operator.getOperators(n,goalState,open);
 			for (Node g : nodeSuccessors) {
-				Num++;
+
 				g.setParent(n);                   
 				g.setVisited(true);
 
 				if(!open.containsKey(g.toString()) && !close.containsKey(g.toString())) {
+					Num++;
 					if(check_equal(g.getState(),goalState)) {
-
 						String res=Node_Operator.getPath(g,root);
 						res+="\nNum:"+Num;
 						int Cost=Node_Operator.getCost(g, root);
@@ -133,7 +135,6 @@ public class puzzle {
 	public String DFID()  {
 		numvertex=1;
 		String result="";
-
 		for(int depth=0;depth<Integer.MAX_VALUE;depth++) {
 			HashMap<String,Node> stateSets = new HashMap<>();
 			result=limited_dfs(root,goalState, depth,stateSets);
@@ -156,7 +157,7 @@ public class puzzle {
 
 	public String limited_dfs(Node n , Integer [][] goalState, int limit, HashMap <String,Node> H) {
 		String result="";
-		 
+
 		if(check_equal(goalState, n.getState())) {
 			result=Node_Operator.getPath(n,root);
 			result+="\nNum:"+numvertex;
@@ -168,16 +169,13 @@ public class puzzle {
 			return "cutoff";
 		}
 		else {
-			List<Node> nodeSuccessors = null;
-			H.put(n.toString(),n);
-			boolean isCutoff=false; 
-			nodeSuccessors = Node_Operator.getOperators(n,goalState,H);
-			for (Node g : nodeSuccessors) {
-				
-				
-				numvertex++;
-				g.setParent(n);                   
 
+			H.put(n.toString(),n);
+			numvertex++;
+			boolean isCutoff=false; 
+			List<Node> nodeSuccessors = Node_Operator.getOperators(n,goalState,H);
+			for (Node g : nodeSuccessors) {
+				g.setParent(n);    
 				result=limited_dfs(g,goalState,limit-1,H);
 
 				if(result.equals("cutoff")) {
@@ -212,8 +210,9 @@ public class puzzle {
 		int NumVertex=1;
 		Node currentNode = new Node(root.getState());
 
-		currentNode.setTotalCost(0 ,heuristicFunction(currentNode.getState(), goalState));
 
+		currentNode.setF(currentNode.getTotalCost()+heuristicFunction(currentNode.getState(), goalState));
+		
 		nodePriorityQueue.add(currentNode);
 		open.put(currentNode.toString(),currentNode);
 
@@ -223,7 +222,6 @@ public class puzzle {
 			if(this.WithOpen==true) {
 				PrintOpen(open);
 			}
-			
 
 			Node n=nodePriorityQueue.poll();
 
@@ -239,22 +237,21 @@ public class puzzle {
 			}
 			close.put(n.toString(), n);
 
-			List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState,close);
+			List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState,open);
 
 			for (Node x : nodeSuccessors) {
-				NumVertex++;
 
-				x.setParent(n);
-				x.setVisited(true);
 				if(!close.containsKey(x.toString()) && !nodePriorityQueue.contains(x) ) {
-					x.setTotalCost(n.getTotalCost() ,heuristicFunction(x.getState(), goalState));
+					x.setParent(n);
+					NumVertex++;	
+					x.setF(x.getTotalCost()+heuristicFunction(x.getState(), goalState));
 					open.put(x.toString(), x);
 					nodePriorityQueue.add(x);
 
 				}
 				else if(nodePriorityQueue.contains(x)) {
 					Node z= open.remove(x.toString());
-					if(z.getTotalCost()>x.getTotalCost()) {
+					if(z.getF()>x.getF()) {
 						open.put(x.toString(), x);
 						nodePriorityQueue.remove(z);//remove the one with higher cost
 						nodePriorityQueue.add(x);
@@ -269,8 +266,6 @@ public class puzzle {
 		String res="no path";
 		res+="\nNum:"+NumVertex;
 		return res;
-
-
 	}
 
 
@@ -296,9 +291,31 @@ public class puzzle {
 				}
 			}
 		}
+
 		return 3*manhattanDistance;
-		
-				
+
+
+
+	} 
+
+	private int heuristicFunction_IDA(Integer [][] currentState, Integer[][] goalState) {
+		int manhattanDistance = 0;
+		for (int c = 0; c < goalState.length; c++) {
+			for (int d = 0; d < goalState[0].length; d++) {
+				for (int a = 0; a < currentState.length; a++) {
+					for (int b = 0; b < currentState[0].length; b++) {
+						if (currentState[a][b] == goalState[c][d] && currentState[a][b]!=null ) {
+							manhattanDistance+=Math.abs(a-c)+Math.abs(b-d);
+						}
+					}
+
+				}
+			}
+		}
+
+		return 3*manhattanDistance;
+
+
 
 	} 
 
@@ -306,83 +323,77 @@ public class puzzle {
 
 
 
-	public String IDA_Star() {
-		int NumVertex=1;
+	public String IDA_Star(){
+		int NumVertex=0;
 		String result="";
 
-		HashMap<String, Node> open=new HashMap<>();
-		Stack<Node> L = new Stack<Node>();
+		Node start=root;
+		HashMap<String, Node> H = new HashMap<String, Node>(); 
+		Stack<Node> ST = new Stack<>(); 
 
-		int t=root.getTotalCost()+heuristicFunction(root.getState(),goalState);
 
-		while(t!=Integer.MAX_VALUE) {
-			int minF=Integer.MAX_VALUE;
+		start.setF(start.getTotalCost()+heuristicFunction_IDA(start.getState(),goalState));
 
-			L.push(root);
-			open.put(root.toString(),root);
-
-			while(!L.isEmpty()) {
-
-				if(this.WithOpen==true) {
-					PrintOpen(open);
+		int t=start.getF();
+		while (t!=Integer.MAX_VALUE){
+			int minF = Integer.MAX_VALUE;
+			start.setVisited(false);
+			ST.push(start);
+			H.put(start.toString(), start);
+			while (!ST.isEmpty()){
+				Node n = ST.pop();
+				if (n.isVisited()) {
+					H.remove(n.toString());
 				}
+				else{
+					n.setVisited(true);
+					ST.push(n);
 
-				Node n= L.pop();
-				if(n.isVisited()) {//mark as out
-					open.remove(n.toString());
-				}
-				else {
-					n.setVisited(true);//mark as "out"
-					L.push(n);
 					List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState);
-					for (Node g : nodeSuccessors) {
+					for (Node g : nodeSuccessors){
 						NumVertex++;
-
 						g.setParent(n);                   
-						int f_g=g.getTotalCost()+heuristicFunction(g.getState(),goalState);
+						g.setF(n.getTotalCost()+heuristicFunction(g.getState(),goalState));
+												
 
-						if(f_g>t) {
-							minF=Math.min(minF,f_g);
+						if(this.WithOpen==true) {
+							PrintOpen(H);
+						}
+
+						if (g.getF()>t){
+							minF = Math.min(minF,g.getF());
 							continue;
 						}
-						Node take=open.get(g.toString());
-						if(open.containsKey(g.toString()) && take.isVisited()) {
+						Node re = H.get(g.toString());
+						if (H.containsKey(g.toString()) && re.isVisited())
 							continue;
-						}
-						if(open.containsKey(g.toString()) && take.isVisited()==false) {
-							if(take.getTotalCost()+heuristicFunction(take.getState(),goalState)>f_g){
-								L.remove(take);
-								open.remove(take.toString());
+						if (H.containsKey(g.toString()) && !re.isVisited()) {
+							if (re.getF() > g.getF()) {
+								H.remove(re.toString());
+								ST.remove(g);
 							}
-							else {
+							else
 								continue;
-							}
-
 						}
-						if(check_equal(g.getState(),goalState)) {
+
+						if (check_equal(g.getState(),goalState)) {
 							result=Node_Operator.getPath(g,root);
 							result+="\nNum:"+NumVertex;
 							int Cost=Node_Operator.getCost(g, root);
 							result+="\nCost: "+Cost;
 							return result;
-
 						}
-						L.push(g);
-						open.put(g.toString(),g);
-
+						
+						ST.push(g);
+						H.put(g.toString(),g);
 					}
 				}
-
-
 			}
-			t=minF;
-			root.setVisited(false);//initialize the root
-
-
-
-
+			
+			t= minF;
+			start.setVisited(false);
+			
 		}
-
 		String res="no path";
 		res+="\nNum:"+NumVertex;
 		return res;
@@ -395,118 +406,200 @@ public class puzzle {
 
 
 
+	//	public String IDA_Star() {
+	//		int NumVertex=1;
+	//		String result="";
+	//
+	//		HashMap<String, Node> open=new HashMap<>();
+	//		Stack<Node> L = new Stack<Node>();
+	//		
+	//
+	//		int t=root.getTotalCost()+heuristicFunction(root.getState(),goalState);
+	//
+	//		while(t!=Integer.MAX_VALUE) {
+	//			int minF=Integer.MAX_VALUE;
+	//
+	//			L.push(root);
+	//			open.put(root.toString(),root);
+	//
+	//			while(!L.isEmpty()) {
+	//
+	//				if(this.WithOpen==true) {
+	//					PrintOpen(open);
+	//				}
+	//
+	//				Node n= L.pop();
+	//				if(n.isVisited()) {//mark as out
+	//					open.remove(n.toString());
+	//				}
+	//				else {
+	//					n.setVisited(true);//mark as "out"
+	//					L.push(n);
+	//					List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState);
+	//					for (Node g : nodeSuccessors) {
+	//						NumVertex++;
+	//						g.setParent(n);                   
+	//						g.setF(n.getTotalCost()+heuristicFunction(g.getState(),goalState));
+	//						
+	//						if(g.getF()>t) {
+	//							minF=Math.min(minF,g.getF());
+	//							continue;
+	//						}
+	//						Node take=open.get(g.toString());
+	//						if(open.containsKey(g.toString()) && take.isVisited()) {
+	//							continue;
+	//						}
+	//						if(open.containsKey(g.toString()) && take.isVisited()==false) {
+	//							if(take.getF()>g.getF()){
+	//								L.remove(take);
+	//								open.remove(take.toString());
+	//							}
+	//							else {
+	//								continue;
+	//							}
+	//
+	//						}
+	//						if(check_equal(g.getState(),goalState)) {
+	//							result=Node_Operator.getPath(g,root);
+	//							result+="\nNum:"+NumVertex;
+	//							int Cost=Node_Operator.getCost(g, root);
+	//							result+="\nCost: "+Cost;
+	//							return result;
+	//
+	//						}
+	//						L.push(g);
+	//						open.put(g.toString(),g);
+	//
+	//					}
+	//				}
+	//
+	//			}
+	//			t=minF;
+	//			root.setVisited(false);//initialize the root
+	//
+	//
+	//
+	//
+	//		}
+	//
+	//		String res="no path";
+	//		res+="\nNum:"+NumVertex;
+	//		return res;
+	//
+	//	}
+	//
+
+
 	public String DFBnB() {
-		int NumVertex=1;
-		String result="";
+		int num=0;
+		String result = ""; 
+		//create openList
+		HashMap<String,Node> H = new HashMap<String,Node>();  
 
-		HashMap<String, Node> H=new HashMap<>();
-		Stack<Node> L = new Stack<Node>();
+		Stack<Node> my_stack = new Stack<Node>();
 
-		H.put(root.toString(), root);
-		L.push(root);
+		Stack<Node> save_order = new Stack<Node>();
 
-		int t=Integer.MAX_VALUE;
+		Node parent  = new Node(root.getState());
+		int t = Integer.MAX_VALUE;
+		my_stack.add(parent);
+		H.put(parent.toString(), parent);
 
-		while(!L.isEmpty()) {
-			Node n=L.pop();
-
+		while(!my_stack.empty()) 
+		{
 			if(this.WithOpen==true) {
 				PrintOpen(H);
 			}
 
-			if(n.isVisited()) {//mark as "out"
-				H.remove(n.toString());
-			}
-			else {
-				n.setVisited(true);//make as "out"
-				L.push(n);
+			parent = my_stack.pop();
+			if(parent.isVisited()) {
+				H.remove(parent.toString());
+			}else {
+				parent.setVisited(true); 
+				my_stack.add(parent);
+				num++;
 
-				List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState);
-				Node [] N=new Node[nodeSuccessors.size()];
-
-				//apply all of the allowed operators on n
-				int i=0;
-				for (Node g : nodeSuccessors) {
-					NumVertex++;
-					g.setParent(n);
-					g.setTotalCost(g.getTotalCost(), heuristicFunction(g.getState(), goalState));
-					N[i]=g;
-					i++;
-
-				}
-				//sort N
-				Arrays.asList(N);
-				NodePriorityComparator nodePriorityComparator = new NodePriorityComparator();
-				Arrays.sort(N,nodePriorityComparator);
 				
+				PriorityQueue<Node> priority_queue = new PriorityQueue<Node>(new NodePriorityComparator());				
+				List<Node> new_ = Node_Operator.getOperators(parent, goalState);
 
-				for (i=0;i<N.length;i++) {
-					if(N[i].getTotalCost()>=t) {
-						//remove g and all the nodes after it 
-						
-						N[i]=null;
-						while(i<N.length) {
-							N[i]=null;
-							i++;
-						}
-						
-						
-						
-					}
-					else if(H.containsKey(N[i].toString()) && N[i].isVisited()) {
-						//remove g from N
-						N[i]=null;
-					}
-					else if(H.containsKey(N[i].toString()) && !N[i].isVisited()) {
-						Node g_tag=H.get(N[i].toString());
-						if(g_tag.getTotalCost()<=N[i].getTotalCost()) {
-							//remove g from N
-							N[i]=null;
+				for(Node a : new_) {	
 
+					a.setParent(parent);
+					a.setF((parent.getTotalCost())+ heuristicFunction(a.getState(), goalState) );
+					priority_queue.add(a);
+				}
+				Iterator<Node> it = priority_queue.iterator();
+				while(it.hasNext()) {
+					Node curr = it.next();
+					if(curr.getF() >= t)
+					{
+						//remove g all the nodes after it
+						while(!priority_queue.isEmpty()) {
+							//savig the order-cause we cant delete all the priority queue
+							if(!priority_queue.peek().toString().equals(curr.toString())) {
+								save_order.add(priority_queue.poll());
+							}else {
+								priority_queue.clear();
+							}
 						}
-						else {
-							L.remove(g_tag);
-							H.remove(g_tag.toString());
+						//add to priority queue again
+						while(!save_order.isEmpty()) {
+							priority_queue.add(save_order.pop());
 						}
-					}
-					else if(N[i]!=null && check_equal(N[i].getState(), goalState) ) {
 
-						t=N[i].getTotalCost()+ heuristicFunction(N[i].getState(), goalState);
-						result=Node_Operator.getPath(N[i],root);
-						result+="\nNum:"+NumVertex;
-						int Cost=Node_Operator.getCost(N[i], root);
+						it = priority_queue.iterator();
+					}
+					else if( H.get(curr.toString()) != null &&  H.get(curr.toString()).isVisited()){
+						priority_queue.remove(curr);
+						it = priority_queue.iterator();
+					}else if(H.get(curr.toString()) !=null &&  !H.get(curr.toString()).isVisited()) {
+						if(H.get(curr.toString()).getF() <= curr.getF()) {
+							priority_queue.remove(curr);
+							it = priority_queue.iterator();
+						}else {
+							my_stack.remove(H.get(curr.toString()));
+							H.remove(curr.toString());
+						}
+					}else if(check_equal(curr.getState(), goalState)) {						
+						t = curr.getF();
+						result=Node_Operator.getPath(curr,root);
+						result+="\nNum:"+num;
+						int Cost=Node_Operator.getCost(curr, root);
 						result+="\nCost: "+Cost;
 
-						if(Cost<t) {
-							return result;
+						while(!priority_queue.isEmpty()) {
+							if(!priority_queue.peek().toString().equals(curr.toString())) {
+								save_order.add(priority_queue.poll());
+							}else {
+								priority_queue.clear();
+							}
 						}
-
-
-						//remove g and all the nodes after it 
-						N[i]=null;
-						while(i<N.length) {
-							N[i]=null;
-							i++;
-						}
+						while(!save_order.isEmpty()) {
+							priority_queue.add(save_order.pop());
+						}	
+						it = priority_queue.iterator();	
 					}
 				}
-
-				//insert N into L and H
-				for(int j=N.length-1;j>=0;j--) {
-					if(N[j]!=null) {
-						L.push(N[j]);
-						H.put(N[j].toString(),N[j]);
-					}					
-
-
+				//insert to priority queue in reverse
+				Stack<Node> stack_temp = new Stack<Node>();
+				while(!priority_queue.isEmpty()) {
+					stack_temp.add(priority_queue.poll());
 				}
-
+				while(!stack_temp.isEmpty()) 
+				{
+					Node temp = stack_temp.pop();
+					my_stack.add(temp);
+					H.put(temp.toString(), temp);
+				}
 			}
 		}
-
-		String res="no path";
-		res+="\nNum:"+numvertex;
-		return res;
+		return result;
 
 	}
 }
+
+
+
+
+
