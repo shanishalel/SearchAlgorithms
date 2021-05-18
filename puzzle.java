@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +14,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+
+
 
 public class puzzle {
 	private Node root;
@@ -62,7 +65,8 @@ public class puzzle {
 
 	//*******************************Algorithms*******************************
 
-
+/*
+ * the BFS algo */
 	public String BFS() {
 		HashMap<String,Node> open = new HashMap<>();//open list
 		HashMap<String,Node> close = new HashMap<>();//close list
@@ -72,49 +76,56 @@ public class puzzle {
 		int Num=1;//number of nodes that created
 
 		while (!L.isEmpty()) {
-			Node n=L.poll();
+			Node n=L.poll();//poll the front from L stack
 
 			if(this.WithOpen==true) {
 				PrintOpen(open);
 			}
+			
 			close.put(n.toString(),root);
-			open.remove(n.toString());
+			open.remove(n.toString());//remove from open 
 
+			//gets operators and create them only if the open list is't contains them  
 			List<Node> nodeSuccessors = Node_Operator.getOperators(n,goalState,open);
+			
 			for (Node g : nodeSuccessors) {
 
-				g.setParent(n);                   
-				g.setVisited(true);
-
+				g.setParent(n);//set the n as g parent                    
+				g.setVisited(true);//set as visited node
+				
+				
 				if(!open.containsKey(g.toString()) && !close.containsKey(g.toString())) {
 					Num++;
+					//if we are in the goal state
 					if(check_equal(g.getState(),goalState)) {
 						String res=Node_Operator.getPath(g,root);
-						res+="\nNum:"+Num;
+						res+="\nNum: "+Num;
 						int Cost=Node_Operator.getCost(g, root);
 						res+="\nCost: "+Cost;
 						return res;
 					}
 
-					L.add(g);
-					open.put(g.toString(),g);
+					L.add(g);//add it to the stack 
+					open.put(g.toString(),g);//put in the open list 
 				}
 
 			}
 
 		}
 		String res="no path";
-		res+="\nNum:"+Num;
+		res+="\nNum: "+Num;
 		return res;
 	}
 
 
-	//print the open list to the screen
+	// function that print the open list to the screen
 	private void PrintOpen(HashMap<String, Node> open) {
 		System.out.println(open.values().toString());
 
 	}
 
+	/*
+	 * the function checking if the state and the goalState2 is equal*/
 	private boolean check_equal(Integer[][] state, Integer[][] goalState2) {
 		for(int i=0; i<state.length;i++) {
 			for(int j=0;j<state[i].length;j++) {
@@ -127,16 +138,16 @@ public class puzzle {
 	}
 
 
+	static int numvertex;//static var
 
-
-
-	static int numvertex;
-
+	/*
+	 * dfid that is the function that is the "matefet" function */
 	public String DFID()  {
 		numvertex=1;
 		String result="";
 		for(int depth=0;depth<Integer.MAX_VALUE;depth++) {
 			HashMap<String,Node> stateSets = new HashMap<>();
+			//limited dfs till the depth we at 
 			result=limited_dfs(root,goalState, depth,stateSets);
 			if(this.WithOpen==true) {
 				PrintOpen(stateSets);
@@ -149,22 +160,22 @@ public class puzzle {
 
 		}
 		String res="no path";
-		res+="\nNum:"+numvertex;
+		res+="\nNum: "+numvertex;
 		return res;
-
 
 	}
 
 	public String limited_dfs(Node n , Integer [][] goalState, int limit, HashMap <String,Node> H) {
 		String result="";
-
+		//if we got the goal state
 		if(check_equal(goalState, n.getState())) {
 			result=Node_Operator.getPath(n,root);
-			result+="\nNum:"+numvertex;
+			result+="\nNum: "+numvertex;
 			int Cost=Node_Operator.getCost(n, root);
 			result+="\nCost: "+Cost;
 			return result;
 		}
+		//if we got limit ==0 so we done in this iteration
 		else if(limit==0) {
 			return "cutoff";
 		}
@@ -173,8 +184,11 @@ public class puzzle {
 			H.put(n.toString(),n);
 			numvertex++;
 			boolean isCutoff=false; 
+			//got the operators and checking is the H contains this node before adding it
 			List<Node> nodeSuccessors = Node_Operator.getOperators(n,goalState,H);
+			
 			for (Node g : nodeSuccessors) {
+				
 				g.setParent(n);    
 				result=limited_dfs(g,goalState,limit-1,H);
 
@@ -187,8 +201,9 @@ public class puzzle {
 
 			}
 
-
+			//remove n fron H set
 			H.remove(n.toString());
+			
 			if(isCutoff==true) {
 				return "cutoff";
 			}
@@ -199,20 +214,24 @@ public class puzzle {
 
 	}
 
+	/*
+	 * the function of A* algo */
+	
 	public String A_Star() {
 		String result="";
 
-		HashMap<String,Node> open = new HashMap<>();
-		HashMap<String,Node> close = new HashMap<>();
+		HashMap<String,Node> open = new HashMap<>();//open list
+		HashMap<String,Node> close = new HashMap<>();//close list 
+		
 		NodePriorityComparator nodePriorityComparator = new NodePriorityComparator();
 		PriorityQueue<Node> nodePriorityQueue = new PriorityQueue<Node>(5, nodePriorityComparator);
 
 		int NumVertex=1;
 		Node currentNode = new Node(root.getState());
 
+		//herustic function
+		currentNode.setF(currentNode.getTotalCost()+(int)currentNode.h("A*",goalState));
 
-		currentNode.setF(currentNode.getTotalCost()+heuristicFunction(currentNode.getState(), goalState));
-		
 		nodePriorityQueue.add(currentNode);
 		open.put(currentNode.toString(),currentNode);
 
@@ -223,20 +242,23 @@ public class puzzle {
 				PrintOpen(open);
 			}
 
-			Node n=nodePriorityQueue.poll();
+			Node n=nodePriorityQueue.poll();//remove the first in the priority queue
 
-			open.remove(n.toString());
+			open.remove(n.toString());//remove the same node the we remove from the priority queue
 
+			//if we gets to goal 
 			if(check_equal(goalState,n.getState())) {
 				result=Node_Operator.getPath(n,root);
-				result+="\nNum:"+NumVertex;
+				result+="\nNum: "+NumVertex;
 				int Cost=Node_Operator.getCost(n, root);
 				result+="\nCost: "+Cost;
 				return result;
 
 			}
 			close.put(n.toString(), n);
-
+			
+			//gets the operators, this function gets the open list and don't initialized node that 
+			//the open list contains
 			List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState,open);
 
 			for (Node x : nodeSuccessors) {
@@ -244,17 +266,21 @@ public class puzzle {
 				if(!close.containsKey(x.toString()) && !nodePriorityQueue.contains(x) ) {
 					x.setParent(n);
 					NumVertex++;	
-					x.setF(x.getTotalCost()+heuristicFunction(x.getState(), goalState));
-					open.put(x.toString(), x);
-					nodePriorityQueue.add(x);
+					//heuristic function
+					x.setF(n.getTotalCost()+x.h("A*",goalState));
+					
+					open.put(x.toString(), x);//add to the open list
+					nodePriorityQueue.add(x);//add to priority queue
 
 				}
+				
 				else if(nodePriorityQueue.contains(x)) {
 					Node z= open.remove(x.toString());
+					//if the open list contains var that his f is smaller
 					if(z.getF()>x.getF()) {
 						open.put(x.toString(), x);
 						nodePriorityQueue.remove(z);//remove the one with higher cost
-						nodePriorityQueue.add(x);
+						nodePriorityQueue.add(x);//add the one with the smallest cost
 
 					}
 
@@ -264,7 +290,7 @@ public class puzzle {
 		}
 
 		String res="no path";
-		res+="\nNum:"+NumVertex;
+		res+="\nNum: "+NumVertex;
 		return res;
 	}
 
@@ -272,130 +298,91 @@ public class puzzle {
 
 
 
-
-	/*
-	 * this function compute the 
-	 * */
-
-	private int heuristicFunction(Integer [][] currentState, Integer[][] goalState) {
-		int manhattanDistance = 0;
-		for (int c = 0; c < goalState.length; c++) {
-			for (int d = 0; d < goalState[0].length; d++) {
-				for (int a = 0; a < currentState.length; a++) {
-					for (int b = 0; b < currentState[0].length; b++) {
-						if (currentState[a][b] == goalState[c][d] && currentState[a][b]!=null ) {
-							manhattanDistance+=Math.abs(a-c)+Math.abs(b-d);
-						}
-					}
-
-				}
-			}
-		}
-
-		return 3*manhattanDistance;
-
-
-
-	} 
-
-	private int heuristicFunction_IDA(Integer [][] currentState, Integer[][] goalState) {
-		int manhattanDistance = 0;
-		for (int c = 0; c < goalState.length; c++) {
-			for (int d = 0; d < goalState[0].length; d++) {
-				for (int a = 0; a < currentState.length; a++) {
-					for (int b = 0; b < currentState[0].length; b++) {
-						if (currentState[a][b] == goalState[c][d] && currentState[a][b]!=null ) {
-							manhattanDistance+=Math.abs(a-c)+Math.abs(b-d);
-						}
-					}
-
-				}
-			}
-		}
-
-		return 3*manhattanDistance;
-
-
-
-	} 
-
-
-
-
-
+/*the IDA* function 
+ * 
+ * */
+	
 	public String IDA_Star(){
 		int NumVertex=0;
 		String result="";
 
 		Node start=root;
 		HashMap<String, Node> H = new HashMap<String, Node>(); 
-		Stack<Node> ST = new Stack<>(); 
+		Stack<Node> L = new Stack<>(); 
 
-
-		start.setF(start.getTotalCost()+heuristicFunction_IDA(start.getState(),goalState));
+		//the heurstic function 
+		start.setF((start.getTotalCost()+start.h("IDA*",goalState)));
 
 		int t=start.getF();
 		while (t!=Integer.MAX_VALUE){
+
 			int minF = Integer.MAX_VALUE;
 			start.setVisited(false);
-			ST.push(start);
+
+			L.push(start);
 			H.put(start.toString(), start);
-			while (!ST.isEmpty()){
-				Node n = ST.pop();
+
+			while (!L.isEmpty()){
+				if(this.WithOpen==true) {
+					PrintOpen(H);
+
+				}
+				Node n = L.pop();
+				
 				if (n.isVisited()) {
 					H.remove(n.toString());
 				}
 				else{
 					n.setVisited(true);
-					ST.push(n);
-
+					L.push(n);
+					
+					//got all the operators
 					List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState);
 					for (Node g : nodeSuccessors){
 						NumVertex++;
-						g.setParent(n);                   
-						g.setF(n.getTotalCost()+heuristicFunction(g.getState(),goalState));
-												
+						//we initialized n as g parent
+						g.setParent(n); 
 
-						if(this.WithOpen==true) {
-							PrintOpen(H);
-						}
+						//the herustic function 
+						g.setF(g.getTotalCost()+g.h("IDA*",goalState));
 
 						if (g.getF()>t){
 							minF = Math.min(minF,g.getF());
 							continue;
 						}
-						Node re = H.get(g.toString());
-						if (H.containsKey(g.toString()) && re.isVisited())
+						//we visit in it 
+						if (H.containsKey(g.toString()) && H.get(g.toString()).isVisited())
 							continue;
-						if (H.containsKey(g.toString()) && !re.isVisited()) {
-							if (re.getF() > g.getF()) {
-								H.remove(re.toString());
-								ST.remove(g);
+						//we won't visit it 
+						if (H.containsKey(g.toString()) && !H.get(g.toString()).isVisited()) {
+							if (H.get(g.toString()).getF() > g.getF()) {
+								H.remove(g.toString());
+								L.remove(g);
 							}
-							else
+							else {
 								continue;
+							}
 						}
-
+						//got to goal node!
 						if (check_equal(g.getState(),goalState)) {
 							result=Node_Operator.getPath(g,root);
-							result+="\nNum:"+NumVertex;
+							result+="\nNum: "+NumVertex;
 							int Cost=Node_Operator.getCost(g, root);
 							result+="\nCost: "+Cost;
 							return result;
 						}
-						
-						ST.push(g);
+
+						L.push(g);
 						H.put(g.toString(),g);
 					}
 				}
 			}
-			
+
 			t= minF;
-			start.setVisited(false);
-			
+
 		}
 		String res="no path";
-		res+="\nNum:"+NumVertex;
+		res+="\nNum: "+NumVertex;
 		return res;
 
 
@@ -405,140 +392,63 @@ public class puzzle {
 
 
 
-
-	//	public String IDA_Star() {
-	//		int NumVertex=1;
-	//		String result="";
-	//
-	//		HashMap<String, Node> open=new HashMap<>();
-	//		Stack<Node> L = new Stack<Node>();
-	//		
-	//
-	//		int t=root.getTotalCost()+heuristicFunction(root.getState(),goalState);
-	//
-	//		while(t!=Integer.MAX_VALUE) {
-	//			int minF=Integer.MAX_VALUE;
-	//
-	//			L.push(root);
-	//			open.put(root.toString(),root);
-	//
-	//			while(!L.isEmpty()) {
-	//
-	//				if(this.WithOpen==true) {
-	//					PrintOpen(open);
-	//				}
-	//
-	//				Node n= L.pop();
-	//				if(n.isVisited()) {//mark as out
-	//					open.remove(n.toString());
-	//				}
-	//				else {
-	//					n.setVisited(true);//mark as "out"
-	//					L.push(n);
-	//					List<Node> nodeSuccessors = Node_Operator.getOperators(n, goalState);
-	//					for (Node g : nodeSuccessors) {
-	//						NumVertex++;
-	//						g.setParent(n);                   
-	//						g.setF(n.getTotalCost()+heuristicFunction(g.getState(),goalState));
-	//						
-	//						if(g.getF()>t) {
-	//							minF=Math.min(minF,g.getF());
-	//							continue;
-	//						}
-	//						Node take=open.get(g.toString());
-	//						if(open.containsKey(g.toString()) && take.isVisited()) {
-	//							continue;
-	//						}
-	//						if(open.containsKey(g.toString()) && take.isVisited()==false) {
-	//							if(take.getF()>g.getF()){
-	//								L.remove(take);
-	//								open.remove(take.toString());
-	//							}
-	//							else {
-	//								continue;
-	//							}
-	//
-	//						}
-	//						if(check_equal(g.getState(),goalState)) {
-	//							result=Node_Operator.getPath(g,root);
-	//							result+="\nNum:"+NumVertex;
-	//							int Cost=Node_Operator.getCost(g, root);
-	//							result+="\nCost: "+Cost;
-	//							return result;
-	//
-	//						}
-	//						L.push(g);
-	//						open.put(g.toString(),g);
-	//
-	//					}
-	//				}
-	//
-	//			}
-	//			t=minF;
-	//			root.setVisited(false);//initialize the root
-	//
-	//
-	//
-	//
-	//		}
-	//
-	//		String res="no path";
-	//		res+="\nNum:"+NumVertex;
-	//		return res;
-	//
-	//	}
-	//
-
-
 	public String DFBnB() {
 		int num=0;
 		String result = ""; 
 		//create openList
-		HashMap<String,Node> H = new HashMap<String,Node>();  
+		HashMap<String,Node> open = new HashMap<String,Node>();  
 
-		Stack<Node> my_stack = new Stack<Node>();
-
+		Stack<Node> stack_L = new Stack<Node>();
+		
+		Stack<Node> reverse=new Stack<Node>();
+		
+		//I will create a stack that we save the order as needed
 		Stack<Node> save_order = new Stack<Node>();
-
+		
 		Node parent  = new Node(root.getState());
 		int t = Integer.MAX_VALUE;
-		my_stack.add(parent);
-		H.put(parent.toString(), parent);
+		stack_L.push(parent);
+		open.put(parent.toString(), parent);
 
-		while(!my_stack.empty()) 
+		while(!stack_L.empty()) 
 		{
 			if(this.WithOpen==true) {
-				PrintOpen(H);
+				PrintOpen(open);
 			}
 
-			parent = my_stack.pop();
+			parent = stack_L.pop();//gets the front in the stack
+			//we visit this parent
 			if(parent.isVisited()) {
-				H.remove(parent.toString());
+				open.remove(parent.toString());
 			}else {
-				parent.setVisited(true); 
-				my_stack.add(parent);
-				num++;
-
 				
+				parent.setVisited(true); 
+				stack_L.push(parent);
+				num++;
+				
+				//priority queue as the N that hold all the operators by order 
 				PriorityQueue<Node> priority_queue = new PriorityQueue<Node>(new NodePriorityComparator());				
-				List<Node> new_ = Node_Operator.getOperators(parent, goalState);
+				List<Node> successors = Node_Operator.getOperators(parent, goalState);
 
-				for(Node a : new_) {	
-
-					a.setParent(parent);
-					a.setF((parent.getTotalCost())+ heuristicFunction(a.getState(), goalState) );
-					priority_queue.add(a);
+				for(Node child : successors) {	
+					//set parent as a parent 
+					child.setParent(parent);
+					//heuristic function
+					child.setF(child.getTotalCost()+child.h("DFBnB",goalState));
+					//add to the priority queue
+					priority_queue.add(child);
 				}
 				Iterator<Node> it = priority_queue.iterator();
+				//for each operator in N
 				while(it.hasNext()) {
 					Node curr = it.next();
 					if(curr.getF() >= t)
 					{
 						//remove g all the nodes after it
 						while(!priority_queue.isEmpty()) {
-							//savig the order-cause we cant delete all the priority queue
+							//saving the order-cause we cant delete all the priority queue
 							if(!priority_queue.peek().toString().equals(curr.toString())) {
-								save_order.add(priority_queue.poll());
+								save_order.push(priority_queue.poll());
 							}else {
 								priority_queue.clear();
 							}
@@ -550,54 +460,82 @@ public class puzzle {
 
 						it = priority_queue.iterator();
 					}
-					else if( H.get(curr.toString()) != null &&  H.get(curr.toString()).isVisited()){
+					else if( open.get(curr.toString()) != null &&  open.get(curr.toString()).isVisited()){
+
 						priority_queue.remove(curr);
 						it = priority_queue.iterator();
-					}else if(H.get(curr.toString()) !=null &&  !H.get(curr.toString()).isVisited()) {
-						if(H.get(curr.toString()).getF() <= curr.getF()) {
+						
+					}else if(open.get(curr.toString()) !=null &&  !open.get(curr.toString()).isVisited()) {
+						//open contains the same node but with smaller f
+						if(open.get(curr.toString()).getF() <= curr.getF()) {
 							priority_queue.remove(curr);
 							it = priority_queue.iterator();
 						}else {
-							my_stack.remove(H.get(curr.toString()));
-							H.remove(curr.toString());
+							
+							stack_L.remove(open.get(curr.toString()));
+							open.remove(curr.toString());
 						}
+						//we got the goal node
 					}else if(check_equal(curr.getState(), goalState)) {						
 						t = curr.getF();
 						result=Node_Operator.getPath(curr,root);
-						result+="\nNum:"+num;
+						result+="\nNum: "+num;
 						int Cost=Node_Operator.getCost(curr, root);
 						result+="\nCost: "+Cost;
-
+						
 						while(!priority_queue.isEmpty()) {
+							//we not in the curr node
 							if(!priority_queue.peek().toString().equals(curr.toString())) {
-								save_order.add(priority_queue.poll());
+								//we will save the order as it was
+								save_order.push(priority_queue.poll());
 							}else {
+								//delete it 
 								priority_queue.clear();
 							}
 						}
+						//after we clear the queue we will add it int the order we saved
 						while(!save_order.isEmpty()) {
 							priority_queue.add(save_order.pop());
 						}	
+						//initialize the iterator again
 						it = priority_queue.iterator();	
 					}
 				}
 				//insert to priority queue in reverse
-				Stack<Node> stack_temp = new Stack<Node>();
+				reverse = new Stack<Node>();
+				
 				while(!priority_queue.isEmpty()) {
-					stack_temp.add(priority_queue.poll());
+					reverse.push(priority_queue.poll());
 				}
-				while(!stack_temp.isEmpty()) 
+				while(!reverse.isEmpty()) 
 				{
-					Node temp = stack_temp.pop();
-					my_stack.add(temp);
-					H.put(temp.toString(), temp);
+					Node temp = reverse.pop();
+					stack_L.push(temp);
+					open.put(temp.toString(), temp);
 				}
 			}
 		}
-		return result;
-
+		String res="no path";
+		res+="\nNum: "+num;
+		return res;
 	}
+	
+	
+		
+	
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
